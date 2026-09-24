@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#fef9c3">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <script type="module" crossorigin src="./assets/index-HFM1EGUm.js"></script>
+  <script type="module" crossorigin src="./assets/index-IRb7SL1j.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BdR0dA2_.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 <body class="bg-yellow-50 min-h-screen">
@@ -221,11 +221,10 @@
           const idx = i - 1;
           if (cg.phase === 'show') return cg.showIdx === idx ? '🐱' : '';
           if (cg.phase === 'guess') return '';
-          if (cg.picked === null) return '';
-          const wasVisited = cg.order.includes(idx);
-          if (idx === cg.picked && wasVisited) return '🐱';
-          if (idx === cg.picked) return '😺';
-          if (wasVisited) return '🐾';
+          if (cg.picked === null) return idx === cg.spot ? '🐱' : '';
+          if (idx === cg.spot) return '🐱';
+          if (idx === cg.picked) return '❌';
+          if (cg.order.includes(idx)) return '🐾';
           return '';
         },
         catCellClass(i) {
@@ -235,10 +234,9 @@
           if (cg.phase === 'show') return cg.showIdx === idx ? 'bg-yellow-200 anim-pop' : '';
           if (cg.phase === 'guess') return 'cursor-pointer hover:bg-yellow-100 active:translate-y-0.5';
           if (cg.picked === null) return 'opacity-50';
-          const wasVisited = cg.order.includes(idx);
-          if (idx === cg.picked && wasVisited) return 'bg-green-200 anim-pop';
+          if (idx === cg.spot) return 'bg-green-200 anim-pop';
           if (idx === cg.picked) return 'bg-red-200 anim-shake';
-          if (wasVisited) return 'bg-yellow-100';
+          if (cg.order.includes(idx)) return 'bg-yellow-100';
           return '';
         },
         get catResultText() {
