@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#fef9c3">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <script type="module" crossorigin src="./assets/index-BZCQnHXm.js"></script>
+  <script type="module" crossorigin src="./assets/index-g1-IQUjO.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-Eyvx-vDd.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 <body class="bg-yellow-50 min-h-screen">
@@ -144,7 +144,7 @@
 
     <div id="debug-panel" x-show="debug" x-cloak class="hidden lg:block fixed bottom-4 right-4 z-50 w-56 bg-white rounded-xl border-[3px] border-slate-800 shadow-[5px_5px_0_#1e293b] p-3 text-[11px] font-black text-slate-800">
       <div class="flex items-center justify-between mb-2">
-        <span class="uppercase tracking-wide text-slate-500">debug 🛠️</span>
+        <span class="uppercase tracking-wide text-slate-500">debug 🛠️ <span x-text="appVersion" class="text-slate-400"></span></span>
         <button @click="debugOpen = !debugOpen" class="px-1.5 rounded-md border border-slate-300 text-slate-500" x-text="debugOpen ? '–' : '+'"></button>
       </div>
       <div x-show="debugOpen" class="space-y-1.5">
@@ -171,6 +171,7 @@
         _confetti: null,
         debug: new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('debug') === 'true',
         debugOpen: true,
+        appVersion: (typeof window !== 'undefined' && window.__APP_VERSION__) || '',
         get timerText() { void this.rev; return this.fmt(g(() => S().game.elapsedMs, 0)); },
         get confetti() {
           void this.rev;
