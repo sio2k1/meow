@@ -8,12 +8,12 @@
   <meta name="theme-color" content="#fef9c3">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <script type="module" crossorigin src="./assets/index-BTgqln3M.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CSfLb-nK.css">
+  <script type="module" crossorigin src="./assets/index-BkulzIhX.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-XjuA5pme.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 <body class="bg-yellow-50 min-h-screen">
   <main class="pb-16" x-data="mewdokuShell()" x-cloak>
-    <div class="max-w-md mx-auto px-4 pt-6">
+    <div class="max-w-lg mx-auto px-2 sm:px-4 pt-6">
 
       <div x-show="fallback" class="mb-3 rounded-xl bg-yellow-200 border-2 border-slate-800 shadow-[3px_3px_0_#1e293b] px-3 py-2 text-[11px] text-slate-800 font-bold -rotate-1">
         ⚠️ Storage unavailable — progress won't survive a reload.
@@ -45,7 +45,7 @@
         </div>
       </div>
 
-      <div id="board" class="rounded-2xl bg-white p-2.5 shadow-[5px_5px_0_#1e293b] border-[3px] border-slate-800 touch-none relative">
+      <div id="board" class="rounded-2xl bg-white p-1.5 sm:p-2.5 shadow-[5px_5px_0_#1e293b] border-[3px] border-slate-800 touch-none relative">
         <div class="grid gap-[3px]" :style="`grid-template-columns:repeat(${game.size},1fr)`">
           <template x-for="cell in cells()" :key="cell.idx">
             <div :data-idx="cell.idx"
