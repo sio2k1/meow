@@ -8,8 +8,8 @@
   <meta name="theme-color" content="#fef9c3">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <script type="module" crossorigin src="./assets/index-IRb7SL1j.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BdR0dA2_.css">
+  <script type="module" crossorigin src="./assets/index-BZCQnHXm.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Eyvx-vDd.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 <body class="bg-yellow-50 min-h-screen">
   <main class="pb-16" x-data="mewdokuShell()" x-cloak>
@@ -51,7 +51,7 @@
             <div :data-idx="cell.idx"
               class="aspect-square flex items-center justify-center relative text-lg sm:text-xl rounded-md select-none border border-black/10"
               :style="`background:${cell.color}`"
-              :class="[cell.state === 'cross1' && 'brightness-95', cell.state === 'cross2' && 'outline outline-2 outline-orange-500 outline-offset-[-2px]', popCell === cell.idx && 'anim-pop', shakeCell === cell.idx && 'anim-shake', wiggleCell === cell.idx && 'anim-wiggle', hintHighlight.includes(cell.idx) && 'ring-2 ring-fuchsia-500', hintDim && !hintZone.includes(cell.idx) && 'hint-dim', hintZone.includes(cell.idx) && 'hint-zone', hintFocus.includes(cell.idx) && 'hint-focus']">
+              :class="[cell.state === 'cross1' && 'brightness-95', cell.state === 'cross2' && 'outline outline-2 outline-orange-500 outline-offset-[-2px]', popCell === cell.idx && 'anim-pop', shakeCell === cell.idx && 'anim-shake', wiggleCell === cell.idx && 'anim-wiggle', hintHighlight.includes(cell.idx) && 'ring-2 ring-fuchsia-500', hintDim && !hintZone.includes(cell.idx) && 'hint-dim', hintZone.includes(cell.idx) && 'hint-zone', hintFocus.includes(cell.idx) && 'hint-focus', hintChain.includes(cell.idx) && 'hint-chain']">
               <template x-if="cell.state === 'cross1'">
                 <span class="absolute inset-0 flex items-center justify-center text-slate-600 text-base font-black">✕</span>
               </template>
@@ -277,6 +277,12 @@
           const ov = g(() => S().hintOverlay, null);
           if (!ov) return [];
           return ov.overlay.focus || [];
+        },
+        get hintChain() {
+          void this.rev;
+          const ov = g(() => S().hintOverlay, null);
+          if (!ov) return [];
+          return ov.overlay.chainCells || [];
         },
         get lives() { void this.rev; return g(() => S().game.lives, 3); },
         get hints() { void this.rev; return g(() => S().game.hints, { a: 2, b: 2 }); },
