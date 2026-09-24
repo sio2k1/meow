@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mewdoku</title>
+  <meta name="description" content="Cat-flavored Queens-style logic puzzle: one cat per row, column, and color region — no two cats adjacent.">
+  <meta name="theme-color" content="#fef9c3">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <script type="module" crossorigin src="./assets/index-BTgqln3M.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CSfLb-nK.css">
+<link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
+<body class="bg-yellow-50 min-h-screen">
+  <main class="pb-16" x-data="mewdokuShell()" x-cloak>
+    <div class="max-w-md mx-auto px-4 pt-6">
+
+      <div x-show="fallback" class="mb-3 rounded-xl bg-yellow-200 border-2 border-slate-800 shadow-[3px_3px_0_#1e293b] px-3 py-2 text-[11px] text-slate-800 font-bold -rotate-1">
+        ⚠️ Storage unavailable — progress won't survive a reload.
+      </div>
+
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="display text-2xl font-black uppercase tracking-tight">
+          <span class="text-fuchsia-500">Mew</span><span class="text-sky-500">doku</span>
+          <span class="inline-block animate-bounce">🐱</span>
+        </h1>
+        <div class="flex flex-col items-end">
+          <div class="bg-white rounded-full px-3 py-1 shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 text-sm font-black">✦ <span x-text="score.total">0</span></div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex gap-2">
+          <button id="hint-a" @click="hintA()" :disabled="hints.a <= 0" :class="hints.a <= 0 && 'opacity-40'" class="px-3 min-h-[40px] py-1.5 rounded-xl bg-fuchsia-400 text-white text-xs font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]">🐱×<span x-text="hints.a">2</span></button>
+          <button id="hint-b" @click="hintB()" :disabled="hints.b <= 0" :class="hints.b <= 0 && 'opacity-40'" class="px-3 min-h-[40px] py-1.5 rounded-xl bg-lime-400 text-slate-900 text-xs font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]">💡×<span x-text="hints.b">2</span></button>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-lg tracking-tight">
+            <template x-for="i in 3" :key="i">
+              <span x-text="i <= lives ? '❤️' : '🤍'" :class="heartLost && i === lives + 1 ? 'heart-lost inline-block' : ''"></span>
+            </template>
+          </span>
+          <span class="bg-white rounded-full px-3 py-1 shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 text-xs font-black tabular-nums" x-text="timerText">00:00</span>
+          <button @click="toggleSound()" class="px-2.5 py-2 min-h-[40px] min-w-[40px] rounded-xl bg-white text-xs font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]" title="Sound on/off" x-text="settings.sound ? '🔊' : '🔇'">🔊</button>
+        </div>
+      </div>
+
+      <div id="board" class="rounded-2xl bg-white p-2.5 shadow-[5px_5px_0_#1e293b] border-[3px] border-slate-800 touch-none relative">
+        <div class="grid gap-[3px]" :style="`grid-template-columns:repeat(${game.size},1fr)`">
+          <template x-for="cell in cells()" :key="cell.idx">
+            <div :data-idx="cell.idx"
+              class="aspect-square flex items-center justify-center relative text-lg sm:text-xl rounded-md select-none border border-black/10"
+              :style="`background:${cell.color}`"
+              :class="[cell.state === 'cross1' && 'brightness-95', cell.state === 'cross2' && 'outline outline-2 outline-orange-500 outline-offset-[-2px]', popCell === cell.idx && 'anim-pop', shakeCell === cell.idx && 'anim-shake', wiggleCell === cell.idx && 'anim-wiggle', hintHighlight.includes(cell.idx) && 'ring-2 ring-fuchsia-500', hintDim && !hintZone.includes(cell.idx) && 'hint-dim', hintZone.includes(cell.idx) && 'hint-zone', hintFocus.includes(cell.idx) && 'hint-focus']">
+              <template x-if="cell.state === 'cross1'">
+                <span class="absolute inset-0 flex items-center justify-center text-slate-600 text-base font-black">✕</span>
+              </template>
+              <template x-if="cell.state === 'cross2'">
+                <span class="absolute inset-0 flex items-center justify-center text-orange-600 text-base font-black">✕</span>
+              </template>
+              <template x-if="cell.state === 'cat' || cell.state === 'locked'">
+                <span class="absolute inset-0 flex items-center justify-center text-[1.45em] leading-none z-10 pointer-events-none -translate-y-[0.07em] -rotate-6" x-text="cell.emoji"></span>
+              </template>
+              <template x-if="cell.state === 'locked'">
+                <span class="absolute top-0 left-0.5 text-[9px] z-20">🔒</span>
+              </template>
+              <template x-if="flashCell === cell.idx">
+                <span class="absolute inset-0 bg-red-500/40 rounded-md pointer-events-none z-20"></span>
+              </template>
+              <template x-if="hintFocus.includes(cell.idx)">
+                <span class="absolute inset-0 flex items-center justify-center text-[1.4em] z-20 pointer-events-none">❓</span>
+              </template>
+            </div>
+          </template>
+        </div>
+        <div x-show="loading" class="absolute inset-0 z-30 flex items-center justify-center bg-white/80 rounded-2xl">
+          <span class="display text-sm font-black text-slate-700 animate-pulse">Generating cats… 🐾</span>
+        </div>
+      </div>
+
+      <div id="hint-overlay-bar" x-show="hintOverlay" x-cloak class="mt-3 flex gap-2">
+        <button id="hint-apply" @click="applyHintOverlay()" class="flex-1 px-3 py-2.5 rounded-xl bg-lime-400 text-slate-900 text-xs font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]">Apply ✓</button>
+        <button id="hint-dismiss" @click="dismissHintOverlay()" class="px-3 py-2.5 rounded-xl bg-white text-slate-700 text-xs font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]">Dismiss</button>
+      </div>
+
+      <div id="hint-bar" class="mt-4">
+        <div class="text-center text-[11px] text-slate-500 mt-3 font-bold uppercase tracking-wide">tap ✕ · dbl-tap 🐱 · hold+drag paint</div>
+      </div>
+
+      <div id="toast-container" class="mt-4">
+        <div x-show="toast.visible" @click="dismissToast()" x-transition.opacity class="cursor-pointer">
+          <div class="rounded-xl bg-yellow-200 border-2 border-slate-800 shadow-[3px_3px_0_#1e293b] px-4 py-3 text-xs text-slate-800 font-bold flex items-start gap-2 -rotate-1">
+            <span>💡</span>
+            <span x-text="toast.text"></span>
+          </div>
+        </div>
+      </div>
+
+      <div x-show="summary" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4">
+        <div class="bg-white rounded-2xl border-[3px] border-slate-800 shadow-[5px_5px_0_#1e293b] p-6 w-full max-w-xs text-center">
+          <div class="display text-2xl font-black text-slate-800 mb-1" x-text="summary && summary.outcome === 'loss' ? 'Out of lives!' : 'Round complete!'"></div>
+          <div class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4" x-text="summary && summary.outcome === 'loss' ? 'better luck next meow 🐾' : 'purr-fection achieved 🐱'"></div>
+          <div class="text-sm space-y-1.5 font-bold text-slate-700 mb-5" x-show="summary">
+            <template x-if="summary && summary.outcome === 'loss'">
+              <div class="space-y-1.5">
+                <div class="flex justify-between"><span>Time</span><span class="tabular-nums" x-text="fmt(summary.time)"></span></div>
+                <div class="flex justify-between"><span>Out of lives</span><span class="tabular-nums" x-text="`-${summary.lost}`"></span></div>
+                <div class="flex justify-between text-fuchsia-500 text-base border-t-2 border-dashed border-slate-200 pt-2"><span>Points lost</span><span class="tabular-nums" x-text="`-${summary.lost}`"></span></div>
+                <div class="flex justify-between"><span>New total</span><span class="tabular-nums" x-text="summary.total"></span></div>
+              </div>
+            </template>
+            <template x-if="summary && summary.outcome !== 'loss'">
+              <div class="space-y-1.5">
+                <div class="flex justify-between"><span>Time</span><span class="tabular-nums" x-text="fmt(summary.time)"></span></div>
+                <div class="flex justify-between"><span>Lives left</span><span x-text="`${summary.livesLeft} × 100`"></span></div>
+                <div class="flex justify-between"><span>Hints used</span><span x-text="`-${summary.hintsUsed * 50}`"></span></div>
+                <div class="flex justify-between text-fuchsia-500 text-base border-t-2 border-dashed border-slate-200 pt-2"><span>Points earned</span><span x-text="`+${summary.points}`"></span></div>
+              </div>
+            </template>
+          </div>
+          <button @click="nextRound()" class="w-full px-4 py-2.5 rounded-xl text-white text-sm font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]" :class="summary && summary.outcome === 'loss' ? 'bg-slate-500' : 'bg-fuchsia-400'" x-text="summary && summary.outcome === 'loss' ? 'Try again 🐾' : 'Next round 🐱'"></button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="fixed inset-0 z-40 pointer-events-none overflow-hidden" x-show="confetti.length" x-cloak>
+      <template x-for="c in confetti" :key="c.id">
+        <span class="confetti-piece" x-text="c.e" :style="`left:${c.left}vw;animation-delay:${c.delay}s;animation-duration:${c.dur}s`"></span>
+      </template>
+    </div>
+  </main>
+
+  <script>
+    function mewdokuShell() {
+      const S = () => window.mewdoku;
+      const U = () => window.__mewdoku_ui || {};
+      const g = (fn, fb) => { try { return fn(); } catch (e) { return fb; } };
+      return {
+        rev: 0,
+        _confetti: null,
+        get timerText() { void this.rev; return this.fmt(g(() => S().game.elapsedMs, 0)); },
+        get confetti() {
+          void this.rev;
+          if (!this.winFx) { this._confetti = null; return []; }
+          if (!this._confetti) {
+            const E = ['🐱','😸','😻','😹','🐈','😼'];
+            this._confetti = Array.from({ length: 30 }, (_, i) => ({
+              id: i,
+              e: E[i % E.length],
+              left: Math.random() * 96,
+              delay: Math.random() * 0.9,
+              dur: 1.6 + Math.random() * 1.4,
+            }));
+          }
+          return this._confetti;
+        },
+        get game() { void this.rev; return g(() => S().game, { size: 10, cats: {}, crosses: {}, locked: [], lives: 3, hints: { a: 2, b: 2 } }); },
+        get score() { void this.rev; return g(() => S().score, { total: 0, streak: 0, bestStreak: 0 }); },
+        get settings() { void this.rev; return g(() => S().settings, { sound: true }); },
+        get toast() { void this.rev; return g(() => S().toast, { text: '', visible: false }); },
+        get summary() { void this.rev; return g(() => S().summary, null); },
+        get winFx() { void this.rev; return g(() => S().winFx, false); },
+        get loading() { void this.rev; return g(() => S().loading, true); },
+        get fallback() { void this.rev; return g(() => S().fallbackBanner, false); },
+        get shakeCell() { void this.rev; return g(() => S().shakeCell, null); },
+        get flashCell() { void this.rev; return g(() => S().flashCell, null); },
+        get popCell() { void this.rev; return g(() => S().popCell, null); },
+        get wiggleCell() { void this.rev; return g(() => S().wiggleCell, null); },
+        get heartLost() { void this.rev; return g(() => S().heartLost, false); },
+        get hintHighlight() { void this.rev; return g(() => S().hintHighlight, []); },
+        get hintOverlay() { void this.rev; return g(() => S().hintOverlay, null); },
+        get hintDim() { void this.rev; return !!g(() => S().hintOverlay, null); },
+        get hintZone() {
+          void this.rev;
+          const ov = g(() => S().hintOverlay, null);
+          if (!ov) return [];
+          const z = ov.overlay.zone || [];
+          const ex = ov.overlay.excludedZone || [];
+          return z.concat(ex);
+        },
+        get hintFocus() {
+          void this.rev;
+          const ov = g(() => S().hintOverlay, null);
+          if (!ov) return [];
+          return ov.overlay.focus || [];
+        },
+        get lives() { void this.rev; return g(() => S().game.lives, 3); },
+        get hints() { void this.rev; return g(() => S().game.hints, { a: 2, b: 2 }); },
+        cells() { void this.rev; return g(() => S().cellsView(), []); },
+        fmt(ms) { const s = Math.floor((ms || 0) / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); },
+        cycleCross(i) { g(() => S().cycleCross(i)); },
+        placeCat(i) { g(() => S().placeCat(i)); },
+        removeCat() { g(() => S().removeCat()); },
+        hintA() { g(() => S().hintA()); },
+        hintB() { g(() => S().hintB()); },
+        applyHintOverlay() { g(() => S().applyHintOverlay()); },
+        dismissHintOverlay() { g(() => S().dismissHintOverlay()); },
+        toggleSound() { g(() => S().toggleSound()); },
+        nextRound() { g(() => S().nextRound()); },
+        dismissToast() { g(() => S().dismissToast()); },
+      };
+    }
+  </script>
+</body>
+</html>
