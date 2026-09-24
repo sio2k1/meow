@@ -8,8 +8,8 @@
   <meta name="theme-color" content="#fef9c3">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <script type="module" crossorigin src="./assets/index-BkulzIhX.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-XjuA5pme.css">
+  <script type="module" crossorigin src="./assets/index-HFM1EGUm.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BdR0dA2_.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 <body class="bg-yellow-50 min-h-screen">
   <main class="pb-16" x-data="mewdokuShell()" x-cloak>
@@ -114,11 +114,23 @@
                 <div class="flex justify-between"><span>Time</span><span class="tabular-nums" x-text="fmt(summary.time)"></span></div>
                 <div class="flex justify-between"><span>Lives left</span><span x-text="`${summary.livesLeft} × 100`"></span></div>
                 <div class="flex justify-between"><span>Hints used</span><span x-text="`-${summary.hintsUsed * 50}`"></span></div>
+                <div class="flex justify-between text-base border-t-2 border-dashed border-slate-200 pt-2" x-show="summary.hintReward" x-cloak><span>Earned</span><span class="text-fuchsia-500" x-text="summary.hintReward === 'a' ? '+1 🐱 cat reveal' : '+1 💡 hint'"></span></div>
                 <div class="flex justify-between text-fuchsia-500 text-base border-t-2 border-dashed border-slate-200 pt-2"><span>Points earned</span><span x-text="`+${summary.points}`"></span></div>
               </div>
             </template>
           </div>
           <button @click="nextRound()" class="w-full px-4 py-2.5 rounded-xl text-white text-sm font-black shadow-[3px_3px_0_#1e293b] border-2 border-slate-800 active:translate-y-0.5 active:shadow-[1px_1px_0_#1e293b]" :class="summary && summary.outcome === 'loss' ? 'bg-slate-500' : 'bg-fuchsia-400'" x-text="summary && summary.outcome === 'loss' ? 'Try again 🐾' : 'Next round 🐱'"></button>
+          <div x-show="catGame && !summary.restored" x-cloak class="mt-5 border-t-2 border-dashed border-slate-200 pt-4">
+            <div class="text-xs font-black text-slate-800 uppercase tracking-wide mb-1" x-text="catPhaseText"></div>
+            <div class="text-[11px] font-bold text-slate-500 mb-3" x-text="catPhaseSub"></div>
+            <div class="grid grid-cols-3 gap-2 w-max mx-auto mb-3">
+              <template x-for="i in 9" :key="i">
+                <button class="w-14 h-14 rounded-xl border-2 border-slate-800 shadow-[2px_2px_0_#1e293b] flex items-center justify-center text-2xl bg-yellow-50 select-none" :class="catCellClass(i)" :data-cat-cell="i" @click="catGuess(i - 1)" x-text="catCellText(i)"></button>
+              </template>
+            </div>
+            <div class="text-sm font-black" :class="catResultClass" x-show="catGame && catGame.phase === 'done'" x-cloak x-text="catResultText"></div>
+            <button x-show="catGame && catGame.phase !== 'done'" x-cloak @click="skipCatGame()" class="mt-1 text-[11px] font-bold text-slate-400 underline underline-offset-2 hover:text-slate-600">Skip 🐾</button>
+          </div>
         </div>
       </div>
 
@@ -128,6 +140,24 @@
       <template x-for="c in confetti" :key="c.id">
         <span class="confetti-piece" x-text="c.e" :style="`left:${c.left}vw;animation-delay:${c.delay}s;animation-duration:${c.dur}s`"></span>
       </template>
+    </div>
+
+    <div id="debug-panel" x-show="debug" x-cloak class="hidden lg:block fixed bottom-4 right-4 z-50 w-56 bg-white rounded-xl border-[3px] border-slate-800 shadow-[5px_5px_0_#1e293b] p-3 text-[11px] font-black text-slate-800">
+      <div class="flex items-center justify-between mb-2">
+        <span class="uppercase tracking-wide text-slate-500">debug 🛠️</span>
+        <button @click="debugOpen = !debugOpen" class="px-1.5 rounded-md border border-slate-300 text-slate-500" x-text="debugOpen ? '–' : '+'"></button>
+      </div>
+      <div x-show="debugOpen" class="space-y-1.5">
+        <button @click="hintAGrant()" class="w-full px-2 py-1.5 rounded-lg bg-fuchsia-400 text-white shadow-[2px_2px_0_#1e293b] border border-slate-800 active:translate-y-0.5">+1 🐱 reveal</button>
+        <button @click="hintBGrant()" class="w-full px-2 py-1.5 rounded-lg bg-lime-400 text-slate-900 shadow-[2px_2px_0_#1e293b] border border-slate-800 active:translate-y-0.5">+1 💡 hint</button>
+        <button @click="debugRevealOne()" class="w-full px-2 py-1.5 rounded-lg bg-sky-400 text-white shadow-[2px_2px_0_#1e293b] border border-slate-800 active:translate-y-0.5">reveal 1 solution cell</button>
+        <button @click="debugInstantWin()" class="w-full px-2 py-1.5 rounded-lg bg-yellow-300 text-slate-900 shadow-[2px_2px_0_#1e293b] border border-slate-800 active:translate-y-0.5">instant win 🏆</button>
+        <div class="pt-1 border-t border-dashed border-slate-200 tabular-nums">
+          <div class="flex justify-between"><span>hints</span><span x-text="`🐱${hints.a} 💡${hints.b}`"></span></div>
+          <div class="flex justify-between"><span>lives</span><span x-text="lives"></span></div>
+          <div class="flex justify-between"><span>total</span><span x-text="score.total"></span></div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -139,6 +169,8 @@
       return {
         rev: 0,
         _confetti: null,
+        debug: new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('debug') === 'true',
+        debugOpen: true,
         get timerText() { void this.rev; return this.fmt(g(() => S().game.elapsedMs, 0)); },
         get confetti() {
           void this.rev;
@@ -160,6 +192,69 @@
         get settings() { void this.rev; return g(() => S().settings, { sound: true }); },
         get toast() { void this.rev; return g(() => S().toast, { text: '', visible: false }); },
         get summary() { void this.rev; return g(() => S().summary, null); },
+        get catGame() { void this.rev; return g(() => S().catGame, null); },
+        get catCountdown() {
+          void this.rev;
+          const cg = g(() => S().catGame, null);
+          if (!cg || cg.phase !== 'guess') return 0;
+          return Math.max(0, Math.ceil((cg.deadline - Date.now()) / 1000));
+        },
+        get catPhaseText() {
+          void this.rev;
+          const cg = this.catGame;
+          if (!cg) return '';
+          if (cg.phase === 'done') return cg.won ? 'Caught it! 🎉' : 'The cat got away 😿';
+          if (cg.phase === 'guess') return `Where was the cat? (${this.catCountdown})`;
+          return 'Catch the cat! 👀';
+        },
+        get catPhaseSub() {
+          void this.rev;
+          const cg = this.catGame;
+          if (!cg) return '';
+          if (cg.phase === 'show') return 'watch closely…';
+          if (cg.phase === 'guess') return 'tap a cell!';
+          return '';
+        },
+        catCellText(i) {
+          const cg = this.catGame;
+          if (!cg) return '';
+          const idx = i - 1;
+          if (cg.phase === 'show') return cg.showIdx === idx ? '🐱' : '';
+          if (cg.phase === 'guess') return '';
+          if (cg.picked === null) return '';
+          const wasVisited = cg.order.includes(idx);
+          if (idx === cg.picked && wasVisited) return '🐱';
+          if (idx === cg.picked) return '😺';
+          if (wasVisited) return '🐾';
+          return '';
+        },
+        catCellClass(i) {
+          const cg = this.catGame;
+          if (!cg) return '';
+          const idx = i - 1;
+          if (cg.phase === 'show') return cg.showIdx === idx ? 'bg-yellow-200 anim-pop' : '';
+          if (cg.phase === 'guess') return 'cursor-pointer hover:bg-yellow-100 active:translate-y-0.5';
+          if (cg.picked === null) return 'opacity-50';
+          const wasVisited = cg.order.includes(idx);
+          if (idx === cg.picked && wasVisited) return 'bg-green-200 anim-pop';
+          if (idx === cg.picked) return 'bg-red-200 anim-shake';
+          if (wasVisited) return 'bg-yellow-100';
+          return '';
+        },
+        get catResultText() {
+          void this.rev;
+          const cg = this.catGame;
+          const sm = this.summary;
+          if (!cg || cg.phase !== 'done' || !sm) return '';
+          if (!cg.won) return 'no bonus 🐾';
+          return sm.outcome === 'loss' ? 'penalty reduced! ÷3 🐱' : 'points doubled! ×2 🎉';
+        },
+        get catResultClass() {
+          void this.rev;
+          const cg = this.catGame;
+          if (!cg || cg.phase !== 'done') return '';
+          return cg.won ? 'text-fuchsia-500' : 'text-slate-400';
+        },
         get winFx() { void this.rev; return g(() => S().winFx, false); },
         get loading() { void this.rev; return g(() => S().loading, true); },
         get fallback() { void this.rev; return g(() => S().fallbackBanner, false); },
@@ -198,7 +293,13 @@
         dismissHintOverlay() { g(() => S().dismissHintOverlay()); },
         toggleSound() { g(() => S().toggleSound()); },
         nextRound() { g(() => S().nextRound()); },
+        catGuess(i) { g(() => S().catGuess(i)); },
+        skipCatGame() { g(() => S().skipCatGame()); },
         dismissToast() { g(() => S().dismissToast()); },
+        debugRevealOne() { g(() => S().debugRevealOne()); },
+        debugInstantWin() { g(() => S().debugInstantWin()); },
+        hintBGrant() { g(() => { const h = S().game.hints; if (h.b < 3) h.b += 1; }); },
+        hintAGrant() { g(() => { const h = S().game.hints; if (h.a < 3) h.a += 1; }); },
       };
     }
   </script>
